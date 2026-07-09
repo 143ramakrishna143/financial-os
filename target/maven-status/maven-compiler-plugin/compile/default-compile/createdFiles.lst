@@ -1,0 +1,9 @@
+com\financialos\dto\DashboardSummary.class
+com\financialos\model\Expense.class
+com\financialos\model\Income.class
+com\financialos\repository\ExpenseRepository.class
+com\financialos\controller\IncomeController.class
+com\financialos\repository\IncomeRepository.class
+com\financialos\controller\DashboardController.class
+com\financialos\FinancialOsApplication.class
+com\financialos\controller\ExpenseController.class
