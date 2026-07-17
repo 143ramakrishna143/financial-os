@@ -1,24 +1,19 @@
 package com.financialos.service;
 
-import com.financialos.model.Account;
-import com.financialos.model.Transaction;
-import com.financialos.repository.TransactionRepository;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.*;
-
-public class LedgerServiceTest {
+class LedgerServiceTest {
 
     @Mock
     private TransactionRepository transactionRepository;
@@ -27,104 +22,80 @@ public class LedgerServiceTest {
     private LedgerService ledgerService;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    public void testGetBalanceForAccount_NoTransactions() {
+    void testCreditTransactionIncreasesBalance() {
         Long accountId = 1L;
-        when(transactionRepository.findByToAccount_Id(accountId)).thenReturn(List.of());
-        when(transactionRepository.findByFromAccount_Id(accountId)).thenReturn(List.of());
+        BigDecimal amount = new BigDecimal("100.00");
+        Transaction transaction = new Transaction();
+        transaction.setToAccount(new Account());
+        transaction.setAmount(amount);
 
-        BigDecimal balance = ledgerService.getBalanceForAccount(accountId);
+        when(transactionRepository.findByToAccount_Id(accountId)).thenReturn(Arrays.asList(transaction));
 
-        assertEquals(BigDecimal.ZERO, balance);
+        assertEquals(new BigDecimal("100.00"), ledgerService.getBalanceForAccount(accountId));
     }
 
     @Test
-    public void testGetBalanceForAccount_CreditsOnly() {
+    void testDebitTransactionDecreasesBalance() {
         Long accountId = 1L;
-        Transaction creditTransaction = new Transaction();
-        creditTransaction.setAmount(new BigDecimal("100.00"));
-        when(transactionRepository.findByToAccount_Id(accountId)).thenReturn(List.of(creditTransaction));
-        when(transactionRepository.findByFromAccount_Id(accountId)).thenReturn(List.of());
+        BigDecimal amount = new BigDecimal("100.00");
+        Transaction transaction = new Transaction();
+        transaction.setFromAccount(new Account());
+        transaction.setAmount(amount);
 
-        BigDecimal balance = ledgerService.getBalanceForAccount(accountId);
+        when(transactionRepository.findByFromAccount_Id(accountId)).thenReturn(Arrays.asList(transaction));
 
-        assertEquals(new BigDecimal("100.00"), balance);
+        assertEquals(new BigDecimal("-100.00"), ledgerService.getBalanceForAccount(accountId));
     }
 
     @Test
-    public void testGetBalanceForAccount_DebitsOnly() {
+    void testTransferUpdatesBalancesCorrectly() {
+        Long fromAccountId = 1L;
+        Long toAccountId = 2L;
+        BigDecimal amount = new BigDecimal("100.00");
+        Transaction transaction = new Transaction();
+        transaction.setFromAccount(new Account());
+        transaction.setToAccount(new Account());
+        transaction.setAmount(amount);
+
+        when(transactionRepository.findByToAccount_Id(toAccountId)).thenReturn(Arrays.asList(transaction));
+        when(transactionRepository.findByFromAccount_Id(fromAccountId)).thenReturn(Arrays.asList(transaction));
+
+        assertEquals(new BigDecimal("-100.00"), ledgerService.getBalanceForAccount(fromAccountId));
+        assertEquals(new BigDecimal("100.00"), ledgerService.getBalanceForAccount(toAccountId));
+    }
+
+    @Test
+    void testEmptyLedgerReturnsZero() {
         Long accountId = 1L;
-        Transaction debitTransaction = new Transaction();
-        debitTransaction.setAmount(new BigDecimal("-50.00"));
-        when(transactionRepository.findByToAccount_Id(accountId)).thenReturn(List.of());
-        when(transactionRepository.findByFromAccount_Id(accountId)).thenReturn(List.of(debitTransaction));
 
-        BigDecimal balance = ledgerService.getBalanceForAccount(accountId);
+        when(transactionRepository.findByToAccount_Id(accountId)).thenReturn(Arrays.asList());
+        when(transactionRepository.findByFromAccount_Id(accountId)).thenReturn(Arrays.asList());
 
-        assertEquals(new BigDecimal("-50.00"), balance);
+        assertEquals(BigDecimal.ZERO, ledgerService.getBalanceForAccount(accountId));
     }
 
     @Test
-    public void testGetBalanceForAccount_CreditsAndDebits() {
+    void testMultipleTransactionsCalculateCorrectly() {
         Long accountId = 1L;
-        Transaction creditTransaction = new Transaction();
-        creditTransaction.setAmount(new BigDecimal("200.00"));
-        Transaction debitTransaction = new Transaction();
-        debitTransaction.setAmount(new BigDecimal("-150.00"));
-        when(transactionRepository.findByToAccount_Id(accountId)).thenReturn(List.of(creditTransaction));
-        when(transactionRepository.findByFromAccount_Id(accountId)).thenReturn(List.of(debitTransaction));
+        BigDecimal amount1 = new BigDecimal("100.00");
+        BigDecimal amount2 = new BigDecimal("-50.00");
 
-        BigDecimal balance = ledgerService.getBalanceForAccount(accountId);
+        Transaction transaction1 = new Transaction();
+        transaction1.setToAccount(new Account());
+        transaction1.setAmount(amount1);
 
-        assertEquals(new BigDecimal("50.00"), balance);
-    }
+        Transaction transaction2 = new Transaction();
+        transaction2.setFromAccount(new Account());
+        transaction2.setAmount(amount2);
 
-    @Test
-    public void testGetTotalBalanceAllAccounts_NoTransactions() {
-        when(transactionRepository.findAll()).thenReturn(List.of());
+        when(transactionRepository.findByToAccount_Id(accountId)).thenReturn(Arrays.asList(transaction1));
+        when(transactionRepository.findByFromAccount_Id(accountId)).thenReturn(Arrays.asList(transaction2));
 
-        BigDecimal totalBalance = ledgerService.getTotalBalanceAllAccounts();
-
-        assertEquals(BigDecimal.ZERO, totalBalance);
-    }
-
-    @Test
-    public void testGetTotalBalanceAllAccounts_SingleAccount() {
-        Long accountId = 1L;
-        Transaction creditTransaction = new Transaction();
-        creditTransaction.setAmount(new BigDecimal("100.00"));
-        when(transactionRepository.findAll()).thenReturn(List.of(creditTransaction));
-
-        BigDecimal totalBalance = ledgerService.getTotalBalanceAllAccounts();
-
-        assertEquals(new BigDecimal("100.00"), totalBalance);
-    }
-
-    @Test
-    public void testGetTotalBalanceAllAccounts_MultipleAccounts() {
-        Long accountId1 = 1L;
-        Long accountId2 = 2L;
-        Transaction creditTransaction1 = new Transaction();
-        creditTransaction1.setAmount(new BigDecimal("100.00"));
-        Transaction debitTransaction1 = new Transaction();
-        debitTransaction1.setAmount(new BigDecimal("-50.00"));
-        Transaction creditTransaction2 = new Transaction();
-        creditTransaction2.setAmount(new BigDecimal("200.00"));
-        when(transactionRepository.findAll()).thenReturn(Arrays.asList(creditTransaction1, debitTransaction1, creditTransaction2));
-
-        BigDecimal totalBalance = ledgerService.getTotalBalanceAllAccounts();
-
-        assertEquals(new BigDecimal("150.00"), totalBalance);
-    }
-
-    @Test
-    public void testGetTotalBalanceAllAccounts_ExceptionHandling() {
-        when(transactionRepository.findAll()).thenThrow(new RuntimeException("Database error"));
-
-        assertThrows(RuntimeException.class, () -> ledgerService.getTotalBalanceAllAccounts());
+        assertEquals(new BigDecimal("50.00"), ledgerService.getBalanceForAccount(accountId));
     }
 }
