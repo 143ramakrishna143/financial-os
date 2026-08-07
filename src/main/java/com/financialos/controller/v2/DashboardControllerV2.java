@@ -1,56 +1,45 @@
 package com.financialos.controller.v2;
 
+import com.financialos.dashboard.service.DashboardService;
 import com.financialos.dto.DashboardOverviewDTO;
-import com.financialos.dto.widget.*;
-import com.financialos.service.widget.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDateTime;
-
+/**
+ * REST API endpoint for dashboard overview.
+ *
+ * This controller is responsible for:
+ * - Receiving HTTP requests for dashboard data
+ * - Delegating to DashboardService for orchestration
+ * - Returning aggregated responses to clients
+ *
+ * The controller MUST ONLY call DashboardService.
+ * All widget orchestration and execution is handled by DashboardService.
+ */
 @RestController
 @RequestMapping("/api/v2/dashboard")
 public class DashboardControllerV2 {
 
-    private final NetWorthWidgetService netWorthWidgetService;
-    private final CashFlowWidgetService cashFlowWidgetService;
-    private final InvestmentWidgetService investmentWidgetService;
-    private final GoalWidgetService goalWidgetService;
-    private final RecentTransactionsWidgetService recentTransactionsWidgetService;
-    private final FinancialHealthWidgetService financialHealthWidgetService;
+    private final DashboardService dashboardService;
 
-    public DashboardControllerV2(NetWorthWidgetService netWorthWidgetService,
-                                 CashFlowWidgetService cashFlowWidgetService,
-                                 InvestmentWidgetService investmentWidgetService,
-                                 GoalWidgetService goalWidgetService,
-                                 RecentTransactionsWidgetService recentTransactionsWidgetService,
-                                 FinancialHealthWidgetService financialHealthWidgetService) {
-        this.netWorthWidgetService = netWorthWidgetService;
-        this.cashFlowWidgetService = cashFlowWidgetService;
-        this.investmentWidgetService = investmentWidgetService;
-        this.goalWidgetService = goalWidgetService;
-        this.recentTransactionsWidgetService = recentTransactionsWidgetService;
-        this.financialHealthWidgetService = financialHealthWidgetService;
+    public DashboardControllerV2(DashboardService dashboardService) {
+        this.dashboardService = dashboardService;
     }
 
+    /**
+     * Get complete dashboard overview.
+     *
+     * Executes all registered dashboard widgets and returns aggregated responses
+     * in a unified DashboardOverviewDTO format.
+     *
+     * @return ResponseEntity containing DashboardOverviewDTO with all widget responses
+     */
     @GetMapping
-    public ResponseEntity<DashboardOverviewDTO> getOverview(@RequestParam(value = "start", required = false) String start,
-                                                             @RequestParam(value = "end", required = false) String end) {
-        LocalDateTime s = start != null ? LocalDateTime.parse(start) : LocalDateTime.now().minusDays(30);
-        LocalDateTime e = end != null ? LocalDateTime.parse(end) : LocalDateTime.now();
-
-        DashboardOverviewDTO dto = new DashboardOverviewDTO();
-        NetWorthWidgetDTO nw = netWorthWidgetService.get();
-        dto.setNetWorth(nw);
-        dto.setCashFlow(cashFlowWidgetService.getForPeriod(s, e));
-        dto.setInvestments(investmentWidgetService.get());
-        dto.setGoals(goalWidgetService.getAll());
-        dto.setRecentTransactions(recentTransactionsWidgetService.getRecent(10));
-        dto.setHealth(financialHealthWidgetService.get());
-        return ResponseEntity.ok(dto);
+    public ResponseEntity<DashboardOverviewDTO> getOverview() {
+        DashboardOverviewDTO overview = dashboardService.getDashboardOverview();
+        return ResponseEntity.ok(overview);
     }
 }
 
