@@ -7,6 +7,9 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 
+import com.financialos.model.Account;
+import com.financialos.model.Transaction;
+import com.financialos.repository.TransactionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -83,7 +86,7 @@ class LedgerServiceTest {
     void testMultipleTransactionsCalculateCorrectly() {
         Long accountId = 1L;
         BigDecimal amount1 = new BigDecimal("100.00");
-        BigDecimal amount2 = new BigDecimal("-50.00");
+        BigDecimal amount2 = new BigDecimal("50.00");
 
         Transaction transaction1 = new Transaction();
         transaction1.setToAccount(new Account());

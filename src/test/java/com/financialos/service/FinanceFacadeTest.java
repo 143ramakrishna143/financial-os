@@ -10,6 +10,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.financialos.model.Account;
+import com.financialos.model.Transaction;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -20,6 +22,18 @@ class FinanceFacadeTest {
 
     @Mock
     private FinanceEngineService financeEngineService;
+
+    @Mock
+    private LedgerService ledgerService;
+
+    @Mock
+    private TransactionService transactionService;
+
+    @Mock
+    private AccountService accountService;
+
+    @Mock
+    private GoalService goalService;
 
     @InjectMocks
     private FinanceFacade financeFacade;
@@ -35,6 +49,7 @@ class FinanceFacadeTest {
         netWorth.put("totalBalance", new BigDecimal("1000.00"));
         netWorth.put("mutualFundValue", new BigDecimal("500.00"));
         netWorth.put("stockValue", new BigDecimal("300.00"));
+        netWorth.put("netWorth", new BigDecimal("1800.00"));
 
         when(financeEngineService.calculateNetWorth()).thenReturn(netWorth);
 
@@ -50,11 +65,12 @@ class FinanceFacadeTest {
         Map<String, Object> cashFlow = new HashMap<>();
         cashFlow.put("inflow", new BigDecimal("500.00"));
         cashFlow.put("outflow", new BigDecimal("200.00"));
+        cashFlow.put("surplus", new BigDecimal("300.00"));
 
         when(financeEngineService.cashFlowForPeriod(start, end)).thenReturn(cashFlow);
 
         Map<String, Object> result = financeFacade.getCashFlow(start, end);
-        assertEquals(new BigDecimal("300.00"), (BigDecimal) result.get("cashFlow"));
+        assertEquals(new BigDecimal("300.00"), (BigDecimal) result.get("surplus"));
     }
 
     @Test
@@ -66,10 +82,12 @@ class FinanceFacadeTest {
         netWorth.put("totalBalance", new BigDecimal("1000.00"));
         netWorth.put("mutualFundValue", new BigDecimal("500.00"));
         netWorth.put("stockValue", new BigDecimal("300.00"));
+        netWorth.put("netWorth", new BigDecimal("1800.00"));
 
         Map<String, Object> cashFlow = new HashMap<>();
         cashFlow.put("inflow", new BigDecimal("500.00"));
         cashFlow.put("outflow", new BigDecimal("200.00"));
+        cashFlow.put("surplus", new BigDecimal("300.00"));
 
         List<Map<String, Object>> accountsSummary = Arrays.asList(
                 new HashMap<String, Object>() {{
@@ -103,12 +121,26 @@ class FinanceFacadeTest {
 
         when(financeEngineService.calculateNetWorth()).thenReturn(netWorth);
         when(financeEngineService.cashFlowForPeriod(start, end)).thenReturn(cashFlow);
-        when(accountService.getAllAccountsSummary()).thenReturn(accountsSummary);
-        when(transactionService.getRecentTransactions(10)).thenReturn(recentTransactions);
+        when(accountService.getAllAccounts()).thenReturn(Arrays.asList(
+                new Account() {{
+                    setId(1L);
+                    setName("Savings");
+                    setType("SAVINGS");
+                }},
+                new Account() {{
+                    setId(2L);
+                    setName("Checking");
+                    setType("CHECKING");
+                }}
+        ));
+        when(transactionService.getAll()).thenReturn(recentTransactions);
+        when(goalService.getAllGoals()).thenReturn(Arrays.asList());
+        when(ledgerService.getBalanceForAccount(1L)).thenReturn(new BigDecimal("500.00"));
+        when(ledgerService.getBalanceForAccount(2L)).thenReturn(new BigDecimal("-100.00"));
 
         Map<String, Object> result = financeFacade.getDashboardOverview(start, end);
-        assertEquals(new BigDecimal("1800.00"), (BigDecimal) result.get("netWorth"));
-        assertEquals(new BigDecimal("300.00"), (BigDecimal) result.get("cashFlow"));
+        assertEquals(new BigDecimal("1800.00"), (BigDecimal) ((Map<String, Object>) result.get("netWorth")).get("netWorth"));
+        assertEquals(new BigDecimal("300.00"), (BigDecimal) ((Map<String, Object>) result.get("cashFlow")).get("surplus"));
         assertEquals(2, ((List<Map<String, Object>>) result.get("accounts")).size());
         assertEquals(2, ((List<Transaction>) result.get("recentTransactions")).size());
     }
@@ -130,7 +162,7 @@ class FinanceFacadeTest {
                 }}
         );
 
-        when(transactionService.getRecentTransactions(10)).thenReturn(transactions);
+        when(transactionService.getAll()).thenReturn(transactions);
 
         List<Transaction> result = financeFacade.getRecentTransactions(10);
         assertEquals(2, result.size());
