@@ -68,6 +68,15 @@ public interface DashboardWidget {
     int getOrder();
 
     /**
+     * Returns the category for this widget.
+     * Used for grouping, filtering, and dashboard customization.
+     * See {@link WidgetCategory} for available categories.
+     *
+     * @return widget category (e.g., FINANCE, INVESTMENTS)
+     */
+    WidgetCategory getCategory();
+
+    /**
      * Executes the widget and returns structured response.
      * This method is called by DashboardEngine during dashboard composition.
      *

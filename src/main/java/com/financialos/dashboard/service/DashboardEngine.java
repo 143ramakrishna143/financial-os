@@ -77,16 +77,31 @@ public class DashboardEngine {
     }
 
     /**
-     * Executes a single widget with error handling.
+     * Executes a single widget with error handling and execution time measurement.
+     *
+     * This protected method is designed for future enhancements such as:
+     * - Widget response caching
+     * - Execution metrics collection
+     * - Permission-based access control
+     * - Feature flag validation
+     * - Timeout handling
      *
      * @param widget the DashboardWidget to execute
-     * @return DashboardWidgetResponse with status and data/error
+     * @return DashboardWidgetResponse with status, data/error, and execution time
      */
-    private DashboardWidgetResponse<?> executeWidget(DashboardWidget widget) {
+    protected DashboardWidgetResponse<?> executeWidget(DashboardWidget widget) {
         try {
+            long startTime = System.currentTimeMillis();
             logger.log(Level.FINE, "Executing widget: " + widget.getWidgetId());
+
             DashboardWidgetResponse<?> response = widget.getData();
-            logger.log(Level.INFO, "Widget executed successfully: " + widget.getWidgetId());
+
+            long endTime = System.currentTimeMillis();
+            long executionTime = endTime - startTime;
+            response.setExecutionMillis(executionTime);
+
+            logger.log(Level.INFO, "Widget executed successfully: " + widget.getWidgetId()
+                    + " (took " + executionTime + "ms)");
             return response;
         } catch (Exception e) {
             logger.log(Level.WARNING, "Error executing widget: " + widget.getWidgetId(), e);

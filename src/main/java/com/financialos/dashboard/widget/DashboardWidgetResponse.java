@@ -41,6 +41,9 @@ public class DashboardWidgetResponse<T> {
     @JsonProperty("data")
     private T data;
 
+    @JsonProperty("executionMillis")
+    private long executionMillis;
+
     /**
      * Default constructor.
      * Initializes with current timestamp and SUCCESS status.
@@ -48,6 +51,7 @@ public class DashboardWidgetResponse<T> {
     public DashboardWidgetResponse() {
         this.lastUpdated = LocalDateTime.now();
         this.status = WidgetStatus.SUCCESS;
+        this.executionMillis = 0;
     }
 
     /**
@@ -118,6 +122,14 @@ public class DashboardWidgetResponse<T> {
 
     public void setData(T data) {
         this.data = data;
+    }
+
+    public long getExecutionMillis() {
+        return executionMillis;
+    }
+
+    public void setExecutionMillis(long executionMillis) {
+        this.executionMillis = executionMillis;
     }
 
     /**

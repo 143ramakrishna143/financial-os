@@ -36,6 +36,11 @@ public class NetWorthWidget implements DashboardWidget {
     }
 
     @Override
+    public WidgetCategory getCategory() {
+        return WidgetCategory.FINANCE;
+    }
+
+    @Override
     public DashboardWidgetResponse<?> getData() {
         Object data = netWorthWidgetService.get();
         return new DashboardWidgetResponse<>(getWidgetId(), getTitle(), data);

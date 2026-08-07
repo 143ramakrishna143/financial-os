@@ -39,6 +39,11 @@ public class CashFlowWidget implements DashboardWidget {
     }
 
     @Override
+    public WidgetCategory getCategory() {
+        return WidgetCategory.FINANCE;
+    }
+
+    @Override
     public DashboardWidgetResponse<?> getData() {
         LocalDateTime start = LocalDateTime.now().minusDays(30);
         LocalDateTime end = LocalDateTime.now();

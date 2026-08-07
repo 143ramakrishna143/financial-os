@@ -37,6 +37,11 @@ public class RecentTransactionsWidget implements DashboardWidget {
     }
 
     @Override
+    public WidgetCategory getCategory() {
+        return WidgetCategory.FINANCE;
+    }
+
+    @Override
     public DashboardWidgetResponse<?> getData() {
         Object data = recentTransactionsWidgetService.getRecent(10);
         return new DashboardWidgetResponse<>(getWidgetId(), getTitle(), data);

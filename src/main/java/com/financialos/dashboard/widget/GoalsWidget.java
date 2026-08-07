@@ -36,6 +36,11 @@ public class GoalsWidget implements DashboardWidget {
     }
 
     @Override
+    public WidgetCategory getCategory() {
+        return WidgetCategory.GOALS;
+    }
+
+    @Override
     public DashboardWidgetResponse<?> getData() {
         Object data = goalWidgetService.getAll();
         return new DashboardWidgetResponse<>(getWidgetId(), getTitle(), data);

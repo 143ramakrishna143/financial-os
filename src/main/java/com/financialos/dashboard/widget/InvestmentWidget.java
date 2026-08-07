@@ -36,6 +36,11 @@ public class InvestmentWidget implements DashboardWidget {
     }
 
     @Override
+    public WidgetCategory getCategory() {
+        return WidgetCategory.INVESTMENTS;
+    }
+
+    @Override
     public DashboardWidgetResponse<?> getData() {
         Object data = investmentWidgetService.get();
         return new DashboardWidgetResponse<>(getWidgetId(), getTitle(), data);
