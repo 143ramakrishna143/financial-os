@@ -1,6 +1,7 @@
 package com.financialos.dashboard.widget;
 
 import com.financialos.service.widget.FinancialHealthWidgetService;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 /**
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Component;
  * Wraps FinancialHealthWidgetService and adapts response to DashboardWidgetResponse format.
  */
 @Component
+@Order(5)
 public class FinancialHealthWidget implements DashboardWidget {
 
     private final FinancialHealthWidgetService financialHealthWidgetService;
@@ -20,16 +22,22 @@ public class FinancialHealthWidget implements DashboardWidget {
 
     @Override
     public String getWidgetId() {
-        return "health";
+        return WidgetIds.FINANCIAL_HEALTH;
     }
 
     @Override
-    public DashboardWidgetResponse getData() {
+    public String getTitle() {
+        return "Financial Health";
+    }
+
+    @Override
+    public int getOrder() {
+        return 5;
+    }
+
+    @Override
+    public DashboardWidgetResponse<?> getData() {
         Object data = financialHealthWidgetService.get();
-        return new DashboardWidgetResponse(
-            getWidgetId(),
-            "Financial Health",
-            data
-        );
+        return new DashboardWidgetResponse<>(getWidgetId(), getTitle(), data);
     }
 }

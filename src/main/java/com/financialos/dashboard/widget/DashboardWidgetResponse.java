@@ -1,38 +1,82 @@
 package com.financialos.dashboard.widget;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDateTime;
-import java.util.Map;
 
 /**
  * Generic response object for all dashboard widgets.
  *
- * This DTO is designed to be reusable across all widget types,
- * allowing each widget to return structured data in a consistent format.
+ * This generic DTO provides strong typing for widget responses while maintaining
+ * clean JSON serialization. Each widget returns its specific data type:
  *
- * Fields:
- * - widgetId: Unique identifier for the widget
- * - title: User-friendly widget title
- * - lastUpdated: Timestamp of when data was last fetched/calculated
- * - status: Status indicator (e.g., "success", "loading", "error")
- * - data: Widget-specific data (can be any object, widget determines structure)
+ * Examples:
+ * <pre>
+ * DashboardWidgetResponse<NetWorthWidgetDTO> netWorthResponse = ...
+ * DashboardWidgetResponse<CashFlowWidgetDTO> cashFlowResponse = ...
+ * DashboardWidgetResponse<List<GoalWidgetDTO>> goalsResponse = ...
+ * </pre>
+ *
+ * Benefits of Generics:
+ * - Compile-time type safety (no casting)
+ * - Better IDE autocomplete and refactoring support
+ * - Clear contract between widget and consumer
+ * - Easier frontend integration (type-aware)
+ * - Simpler OpenAPI/Swagger documentation
+ *
+ * @param <T> The widget-specific data type
  */
-public class DashboardWidgetResponse {
+public class DashboardWidgetResponse<T> {
+    @JsonProperty("widgetId")
     private String widgetId;
-    private String title;
-    private LocalDateTime lastUpdated;
-    private String status;
-    private Object data;
 
+    @JsonProperty("title")
+    private String title;
+
+    @JsonProperty("lastUpdated")
+    private LocalDateTime lastUpdated;
+
+    @JsonProperty("status")
+    private WidgetStatus status;
+
+    @JsonProperty("data")
+    private T data;
+
+    /**
+     * Default constructor.
+     * Initializes with current timestamp and SUCCESS status.
+     */
     public DashboardWidgetResponse() {
         this.lastUpdated = LocalDateTime.now();
-        this.status = "success";
+        this.status = WidgetStatus.SUCCESS;
     }
 
-    public DashboardWidgetResponse(String widgetId, String title, Object data) {
+    /**
+     * Convenience constructor for creating successful responses.
+     *
+     * @param widgetId the widget identifier
+     * @param title the widget title
+     * @param data the widget-specific data
+     */
+    public DashboardWidgetResponse(String widgetId, String title, T data) {
         this();
         this.widgetId = widgetId;
         this.title = title;
         this.data = data;
+    }
+
+    /**
+     * Constructor for creating error responses.
+     *
+     * @param widgetId the widget identifier
+     * @param status the widget status (typically FAILED or EMPTY)
+     * @param message error message or reason
+     */
+    public DashboardWidgetResponse(String widgetId, WidgetStatus status, String message) {
+        this.widgetId = widgetId;
+        this.lastUpdated = LocalDateTime.now();
+        this.status = status;
+        this.data = (T) message;
+        this.title = widgetId;
     }
 
     // Getters and Setters
@@ -60,19 +104,37 @@ public class DashboardWidgetResponse {
         this.lastUpdated = lastUpdated;
     }
 
-    public String getStatus() {
+    public WidgetStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(WidgetStatus status) {
         this.status = status;
     }
 
-    public Object getData() {
+    public T getData() {
         return data;
     }
 
-    public void setData(Object data) {
+    public void setData(T data) {
         this.data = data;
+    }
+
+    /**
+     * Checks if the response represents a successful execution.
+     *
+     * @return true if status is SUCCESS
+     */
+    public boolean isSuccessful() {
+        return status == WidgetStatus.SUCCESS;
+    }
+
+    /**
+     * Checks if the response represents a failed execution.
+     *
+     * @return true if status is FAILED
+     */
+    public boolean isFailed() {
+        return status == WidgetStatus.FAILED;
     }
 }

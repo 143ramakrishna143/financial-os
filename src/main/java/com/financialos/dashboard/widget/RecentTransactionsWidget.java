@@ -1,6 +1,7 @@
 package com.financialos.dashboard.widget;
 
 import com.financialos.service.widget.RecentTransactionsWidgetService;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 /**
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Component;
  * Default limit is 10 recent transactions.
  */
 @Component
+@Order(6)
 public class RecentTransactionsWidget implements DashboardWidget {
 
     private final RecentTransactionsWidgetService recentTransactionsWidgetService;
@@ -21,16 +23,22 @@ public class RecentTransactionsWidget implements DashboardWidget {
 
     @Override
     public String getWidgetId() {
-        return "recent-transactions";
+        return WidgetIds.RECENT_TRANSACTIONS;
     }
 
     @Override
-    public DashboardWidgetResponse getData() {
+    public String getTitle() {
+        return "Recent Transactions";
+    }
+
+    @Override
+    public int getOrder() {
+        return 6;
+    }
+
+    @Override
+    public DashboardWidgetResponse<?> getData() {
         Object data = recentTransactionsWidgetService.getRecent(10);
-        return new DashboardWidgetResponse(
-            getWidgetId(),
-            "Recent Transactions",
-            data
-        );
+        return new DashboardWidgetResponse<>(getWidgetId(), getTitle(), data);
     }
 }

@@ -1,6 +1,7 @@
 package com.financialos.dashboard.widget;
 
 import com.financialos.service.widget.GoalWidgetService;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 /**
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Component;
  * Wraps GoalWidgetService and adapts response to DashboardWidgetResponse format.
  */
 @Component
+@Order(4)
 public class GoalsWidget implements DashboardWidget {
 
     private final GoalWidgetService goalWidgetService;
@@ -20,16 +22,22 @@ public class GoalsWidget implements DashboardWidget {
 
     @Override
     public String getWidgetId() {
-        return "goals";
+        return WidgetIds.GOALS;
     }
 
     @Override
-    public DashboardWidgetResponse getData() {
+    public String getTitle() {
+        return "Goals";
+    }
+
+    @Override
+    public int getOrder() {
+        return 4;
+    }
+
+    @Override
+    public DashboardWidgetResponse<?> getData() {
         Object data = goalWidgetService.getAll();
-        return new DashboardWidgetResponse(
-            getWidgetId(),
-            "Goals",
-            data
-        );
+        return new DashboardWidgetResponse<>(getWidgetId(), getTitle(), data);
     }
 }

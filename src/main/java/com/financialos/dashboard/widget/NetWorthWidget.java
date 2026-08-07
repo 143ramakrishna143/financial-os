@@ -1,6 +1,7 @@
 package com.financialos.dashboard.widget;
 
 import com.financialos.service.widget.NetWorthWidgetService;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 /**
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Component;
  * Wraps NetWorthWidgetService and adapts response to DashboardWidgetResponse format.
  */
 @Component
+@Order(1)
 public class NetWorthWidget implements DashboardWidget {
 
     private final NetWorthWidgetService netWorthWidgetService;
@@ -20,16 +22,23 @@ public class NetWorthWidget implements DashboardWidget {
 
     @Override
     public String getWidgetId() {
-        return "net-worth";
+        return WidgetIds.NET_WORTH;
     }
 
     @Override
-    public DashboardWidgetResponse getData() {
+    public String getTitle() {
+        return "Net Worth";
+    }
+
+    @Override
+    public int getOrder() {
+        return 1;
+    }
+
+    @Override
+    public DashboardWidgetResponse<?> getData() {
         Object data = netWorthWidgetService.get();
-        return new DashboardWidgetResponse(
-            getWidgetId(),
-            "Net Worth",
-            data
-        );
+        return new DashboardWidgetResponse<>(getWidgetId(), getTitle(), data);
     }
 }
+

@@ -15,8 +15,12 @@ import org.springframework.web.bind.annotation.RestController;
  * - Delegating to DashboardService for orchestration
  * - Returning aggregated responses to clients
  *
+ * Architectural Constraint:
  * The controller MUST ONLY call DashboardService.
- * All widget orchestration and execution is handled by DashboardService.
+ * All widget orchestration and execution is handled by the dashboard layer.
+ *
+ * API Endpoints:
+ * - GET /api/v2/dashboard - Returns complete dashboard overview
  */
 @RestController
 @RequestMapping("/api/v2/dashboard")
@@ -32,7 +36,17 @@ public class DashboardControllerV2 {
      * Get complete dashboard overview.
      *
      * Executes all registered dashboard widgets and returns aggregated responses
-     * in a unified DashboardOverviewDTO format.
+     * in a strongly-typed DashboardOverviewDTO format.
+     *
+     * Response includes:
+     * - netWorth: Net worth with assets and liabilities breakdown
+     * - cashFlow: Cash flow analysis for recent period
+     * - investments: Investment portfolio overview
+     * - goals: Financial goals and progress
+     * - financialHealth: Overall financial health indicators
+     * - recentTransactions: Recent transaction history
+     * - timeline: Historical trends and data
+     * - upcomingBills: Upcoming payment obligations
      *
      * @return ResponseEntity containing DashboardOverviewDTO with all widget responses
      */
