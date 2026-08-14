@@ -44,6 +44,9 @@ public class DashboardWidgetResponse<T> {
     @JsonProperty("executionMillis")
     private long executionMillis;
 
+    @JsonProperty("category")
+    private WidgetCategory category;
+
     /**
      * Default constructor.
      * Initializes with current timestamp and SUCCESS status.
@@ -130,6 +133,14 @@ public class DashboardWidgetResponse<T> {
 
     public void setExecutionMillis(long executionMillis) {
         this.executionMillis = executionMillis;
+    }
+
+    public WidgetCategory getCategory() {
+        return category;
+    }
+
+    public void setCategory(WidgetCategory category) {
+        this.category = category;
     }
 
     /**

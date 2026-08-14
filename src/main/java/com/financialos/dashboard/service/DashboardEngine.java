@@ -90,22 +90,28 @@ public class DashboardEngine {
      * @return DashboardWidgetResponse with status, data/error, and execution time
      */
     protected DashboardWidgetResponse<?> executeWidget(DashboardWidget widget) {
-        try {
-            long startTime = System.currentTimeMillis();
-            logger.log(Level.FINE, "Executing widget: " + widget.getWidgetId());
+        long startTime = System.currentTimeMillis();
+        logger.log(Level.INFO, "Starting widget: " + widget.getWidgetId() + " (" + widget.getTitle() + ")");
 
+        try {
             DashboardWidgetResponse<?> response = widget.getData();
 
-            long endTime = System.currentTimeMillis();
-            long executionTime = endTime - startTime;
+            long executionTime = System.currentTimeMillis() - startTime;
             response.setExecutionMillis(executionTime);
+            // Attach widget category so consumers can group/filter results without querying widget metadata
+            try { response.setCategory(widget.getCategory()); } catch (Exception ignored) {}
+            response.setLastUpdated(java.time.LocalDateTime.now());
 
-            logger.log(Level.INFO, "Widget executed successfully: " + widget.getWidgetId()
-                    + " (took " + executionTime + "ms)");
+            logger.log(Level.INFO, "Finished widget: " + widget.getWidgetId() + " (took " + executionTime + "ms)");
             return response;
         } catch (Exception e) {
-            logger.log(Level.WARNING, "Error executing widget: " + widget.getWidgetId(), e);
-            return createErrorResponse(widget, e);
+            long executionTime = System.currentTimeMillis() - startTime;
+            logger.log(Level.WARNING, "Widget failed: " + widget.getWidgetId() + " (took " + executionTime + "ms)", e);
+
+            DashboardWidgetResponse<?> response = createErrorResponse(widget, e);
+            response.setExecutionMillis(executionTime);
+            response.setLastUpdated(java.time.LocalDateTime.now());
+            return response;
         }
     }
 
@@ -123,6 +129,8 @@ public class DashboardEngine {
             "Failed to execute widget: " + exception.getMessage()
         );
         response.setTitle(widget.getTitle());
+        // Preserve category information even for failed responses
+        try { response.setCategory(widget.getCategory()); } catch (Exception ignored) {}
         return response;
     }
 

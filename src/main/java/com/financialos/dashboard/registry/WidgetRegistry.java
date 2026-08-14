@@ -43,29 +43,49 @@ public class WidgetRegistry {
      * Constructor that receives all auto-discovered DashboardWidget beans.
      * Spring automatically provides all beans implementing DashboardWidget.
      *
+     * Validations performed on startup:
+     * - Widget IDs must be unique (fails fast)
+     * - Widget order values must be unique (fails fast)
+     *
+     * After initialization the internal collections are made immutable to
+     * prevent runtime mutation.
+     *
      * @param widgetList auto-wired list of all DashboardWidget beans
      */
     public WidgetRegistry(List<DashboardWidget> widgetList) {
-        this.widgets = new LinkedHashMap<>();
-        this.widgetsByOrder = new ArrayList<>();
+        // Temporary mutable collections for validation and sorting
+        Map<String, DashboardWidget> tempMap = new LinkedHashMap<>();
+        List<DashboardWidget> tempList = new ArrayList<>();
+        Set<String> ids = new HashSet<>();
+        Set<Integer> orders = new HashSet<>();
 
-        // Register all widgets and sort by order
         for (DashboardWidget widget : widgetList) {
-            registerWidget(widget);
+            // Fail fast on duplicate widget ids
+            if (!ids.add(widget.getWidgetId())) {
+                throw new IllegalStateException("Duplicate widget id detected during startup: " + widget.getWidgetId());
+            }
+
+            // Fail fast on duplicate order values
+            if (!orders.add(widget.getOrder())) {
+                throw new IllegalStateException("Duplicate widget order detected during startup: " + widget.getWidgetId() + " has order " + widget.getOrder());
+            }
+
+            tempMap.put(widget.getWidgetId(), widget);
+            tempList.add(widget);
         }
 
-        // Sort by order annotation
-        widgetsByOrder.sort(Comparator.comparingInt(DashboardWidget::getOrder));
+        // Sort by order and make immutable
+        tempList.sort(Comparator.comparingInt(DashboardWidget::getOrder));
+        this.widgetsByOrder = Collections.unmodifiableList(new ArrayList<>(tempList));
+        this.widgets = Collections.unmodifiableMap(new LinkedHashMap<>(tempMap));
     }
 
     /**
-     * Registers a widget in the registry.
-     *
-     * @param widget the DashboardWidget to register
+     * Registering widgets at runtime is unsupported. Widgets are auto-discovered
+     * and validated during application startup.
      */
-    public void registerWidget(DashboardWidget widget) {
-        widgets.put(widget.getWidgetId(), widget);
-        widgetsByOrder.add(widget);
+    private void registerWidget(DashboardWidget widget) {
+        throw new UnsupportedOperationException("Runtime widget registration is not supported");
     }
 
     /**
